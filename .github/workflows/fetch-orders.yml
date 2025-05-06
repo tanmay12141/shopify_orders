@@ -35,7 +35,8 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: update Shopify orders data"
-          file_pattern: data/orders.json
+          file_pattern: docs/data/orders.json
+
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
