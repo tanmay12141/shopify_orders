@@ -34,7 +34,7 @@ jobs:
         env:
           SHOP_DOMAIN: ${{ secrets.SHOP_DOMAIN }}
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          API_VERSION: '2024-04'
+          API_VERSION: ${{ secrets.API_VERSION }}
         run: |
           python fetch_orders.py
 
