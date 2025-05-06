@@ -2,8 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Shopify Orders</title>
-  <!-- Optional: include DataTables for sorting/searching -->
+  <title>Shopify Orders Dashboard</title>
   <link rel="stylesheet"
     href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
 </head>
@@ -26,27 +25,35 @@
   </table>
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <script
-    src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
   <script>
   fetch('data/orders.json')
     .then(res => res.json())
     .then(data => {
       $('#orders-table').DataTable({
-        data: data,
+        data,
         columns: [
           { data: 'name' },
-          { data: o => (o.customer?.first_name || o.shipping_address?.first_name
-                         || o.billing_address?.first_name
-                         || o.email.split('@')[0] || 'Guest') },
+          { data: o =>
+              (o.customer?.first_name + ' ' + o.customer?.last_name).trim()
+              || (o.shipping_address?.first_name + ' ' + o.shipping_address?.last_name).trim()
+              || (o.billing_address?.first_name + ' ' + o.billing_address?.last_name).trim()
+              || o.email.split('@')[0]
+              || 'Guest'
+          },
           { data: 'created_at' },
           { data: 'email' },
           { data: 'total_price' },
           { data: 'financial_status' },
           { data: 'fulfillment_status' },
           { data: 'tags' },
-          { data: o => (o.fulfillments.map(f=>f.shipment_status).filter(Boolean).join(', ')
-                         || 'Not Available') }
+          { data: o =>
+              o.fulfillments
+               .map(f=>f.shipment_status)
+               .filter(s=>s)
+               .join(', ')
+               || 'Not Available'
+          }
         ]
       });
     })
