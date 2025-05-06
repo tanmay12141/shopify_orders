@@ -29,7 +29,7 @@ jobs:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           API_VERSION: '2024-04'
         run: |
-          python fetch_orders.py
+          python shopify_orders/fetch_orders.py
 
       - name: Commit updated data
         uses: stefanzweifel/git-auto-commit-action@v4
