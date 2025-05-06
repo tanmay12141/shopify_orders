@@ -2,15 +2,15 @@ name: Fetch Shopify Orders
 
 on:
   schedule:
-    - cron:  '0 0 * * *'       # daily at 00:00 UTC
-  workflow_dispatch:         # manual trigger
+    - cron: '0 0 * * *'  # every day at midnight UTC
+  workflow_dispatch:  # allow manual trigger
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Set up Python
@@ -22,6 +22,13 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: Install certifi
+        run: pip install certifi
+
+      - name: Point requests at certifi’s CA bundle
+        run: |
+          echo "REQUESTS_CA_BUNDLE=$(python -c 'import certifi; print(certifi.where())')" >> $GITHUB_ENV
 
       - name: Fetch orders
         env:
@@ -36,7 +43,6 @@ jobs:
         with:
           commit_message: "chore: update Shopify orders data"
           file_pattern: docs/data/orders.json
-
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
