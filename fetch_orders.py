@@ -3,7 +3,9 @@ import csv
 from datetime import datetime, timedelta
 import json, os
 
-
+SHOP_DOMAIN   = os.getenv("SHOP_DOMAIN")
+ACCESS_TOKEN  = os.getenv("ACCESS_TOKEN")
+API_VERSION   = os.getenv("API_VERSION", "2024-04")
 
 def fetch_orders(limit=250, status="any", created_at_min=None):
     """
