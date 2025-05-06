@@ -1,15 +1,12 @@
-import os
-import json
-import csv
 import requests
-import certifi
+import csv
+import json
+import os
 from datetime import datetime, timedelta, timezone
+import certifi
 
-SHOP_DOMAIN  = os.getenv("SHOP_DOMAIN")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-API_VERSION  = os.getenv("API_VERSION", "2024-04")
-OUTPUT_PATH  = "docs/data/orders.json"
-
+# Force requests to use certifi's root CAs
+os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
 
 def fetch_orders(limit=250, status="any", created_at_min=None):
     """
@@ -50,12 +47,7 @@ def fetch_orders(limit=250, status="any", created_at_min=None):
 
     orders = []
     while True:
-        r = requests.get(
-            url,
-            headers=headers,
-            params=params,
-            verify=certifi.where()
-        )
+        r = requests.get(url, headers=headers, params=params, verify=certifi.where())  # Use certifi for SSL certs
         r.raise_for_status()
         batch = r.json().get("orders", [])
         if not batch:
@@ -70,7 +62,6 @@ def fetch_orders(limit=250, status="any", created_at_min=None):
 
     return orders
 
-
 def extract_customer_name(order):
     """
     Return the customer name as shown in the Admin UI:
@@ -83,21 +74,21 @@ def extract_customer_name(order):
     # 1) registered customer
     cust = order.get("customer") or {}
     first = cust.get("first_name", "") or ""
-    last = cust.get("last_name", "") or ""
+    last  = cust.get("last_name", "")  or ""
     if first or last:
         return f"{first} {last}".strip()
 
     # 2) shipping address
     ship = order.get("shipping_address") or {}
     sf = ship.get("first_name", "") or ""
-    sl = ship.get("last_name", "") or ""
+    sl = ship.get("last_name", "")  or ""
     if sf or sl:
         return f"{sf} {sl}".strip()
 
     # 3) billing address
     bill = order.get("billing_address") or {}
     bf = bill.get("first_name", "") or ""
-    bl = bill.get("last_name", "") or ""
+    bl = bill.get("last_name", "")  or ""
     if bf or bl:
         return f"{bf} {bl}".strip()
 
@@ -109,10 +100,8 @@ def extract_customer_name(order):
     # 5) fallback
     return "Guest"
 
-
 def extract_customer_id(order):
     return (order.get("customer") or {}).get("id", "")
-
 
 def extract_delivery_status(order):
     statuses = []
@@ -122,56 +111,16 @@ def extract_delivery_status(order):
             statuses.append(s)
     return ", ".join(statuses) if statuses else "Not Available"
 
-
 def extract_tags(order):
     return order.get("tags", "")
 
-
-def save_orders_to_csv(orders, filename):
-    fields = [
-        "order_id",
-        "customer_id",
-        "customer_name",
-        "created_at",
-        "email",
-        "total_price",
-        "financial_status",
-        "fulfillment_status",
-        "currency",
-        "tags",
-        "delivery_status"
-    ]
-
+def save_orders_to_json(orders, filename):
+    os.makedirs("docs/data", exist_ok=True)
     with open(filename, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fields)
-        writer.writeheader()
-        for o in orders:
-            writer.writerow({
-                "order_id":           o.get("name", ""),
-                "customer_id":        extract_customer_id(o),
-                "customer_name":      extract_customer_name(o),
-                "created_at":         o.get("created_at", ""),
-                "email":              o.get("email", ""),
-                "total_price":        o.get("total_price", ""),
-                "financial_status":   o.get("financial_status", ""),
-                "fulfillment_status": o.get("fulfillment_status", ""),
-                "currency":           o.get("currency", ""),
-                "tags":               extract_tags(o),
-                "delivery_status":    extract_delivery_status(o)
-            })
-
-    print(f"✅ Saved {len(orders)} orders to {filename}")
-
+        json.dump(orders, f, indent=2)
+    print(f"✅ Wrote {len(orders)} orders to {filename}")
 
 if __name__ == "__main__":
-    # use a timezone‐aware UTC timestamp
-    one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
-
+    one_week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()  # Fixed UTC warning
     orders = fetch_orders(created_at_min=one_week_ago)
-
-    # ensure the output directory exists
-    os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
-    with open(OUTPUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(orders, f, indent=2)
-
-    print(f"✅ Wrote {len(orders)} orders to {OUTPUT_PATH}")
+    save_orders_to_json(orders, "docs/data/orders.json")
