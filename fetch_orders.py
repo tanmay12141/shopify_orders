@@ -7,6 +7,9 @@ import certifi
 
 # Force requests to use certifi's root CAs
 os.environ['REQUESTS_CA_BUNDLE'] = certifi.where()
+SHOP_DOMAIN = os.getenv('SHOP_DOMAIN')
+ACCESS_TOKEN = os.getenv('ACCESS_TOKEN')
+API_VERSION = os.getenv('API_VRSION')
 
 def fetch_orders(limit=250, status="any", created_at_min=None):
     """
