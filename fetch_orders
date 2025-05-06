@@ -150,9 +150,9 @@ if __name__ == "__main__":
     one_week_ago = (datetime.utcnow() - timedelta(days=7)).isoformat() + "Z"
     orders = fetch_orders(created_at_min=one_week_ago)
 
-    os.makedirs("data", exist_ok=True)
-    with open("data/orders.json", "w", encoding="utf-8") as f:
-        json.dump(orders, f, indent=2)
+    os.makedirs("docs/data", exist_ok=True)
+    with open("docs/data/orders.json", "w", encoding="utf-8") as f:
+       json.dump(orders, f, indent=2)
+    print(f"✅ Wrote {len(orders)} orders to docs/data/orders.json")
 
-    print(f"✅ Wrote {len(orders)} orders to data/orders.json")
 
